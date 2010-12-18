@@ -1,0 +1,7 @@
+WandPlugin
+
+This is a plugin for the hMod Minecraft server.
+
+Add Wand.jar to /plugins, and then edit server.properties to add "Wand" to the plugin list.
+
+There is only one command "/wand".
