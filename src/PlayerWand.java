@@ -27,11 +27,13 @@ public class PlayerWand
 	public void bind(String command)
 	{
 		wandCommands.add(command);
+		selectedSpell = wandCommands.size() - 1;
 	}
 	
 	public void unbind(String command)
 	{
 		wandCommands.remove(command);
+		selectedSpell = 0;
 	}
 	
 	public int getSelectedSpell()
@@ -47,7 +49,10 @@ public class PlayerWand
 	
 	public void selectSpell(int spell)
 	{
-		selectedSpell = spell;
+		if (spell >= 0 && spell < wandCommands.size())
+		{
+			selectedSpell = spell;
+		}
 	}
 	
 	public String getCurrentCommand()

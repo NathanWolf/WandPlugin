@@ -9,8 +9,8 @@ public class Wand extends Plugin
 	private static final WandListener listener = new WandListener();
 	private static final Logger log = Logger.getLogger("Minecraft");
 	
-	private String name = "WandPlugin";
-	private String version = "0.01";
+	private String name = "Wand";
+	private String version = "0.02";
 	
 	public void enable() 
 	{
@@ -32,6 +32,7 @@ public class Wand extends Plugin
 		etc.getLoader().addListener(PluginLoader.Hook.COMMAND, listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.ITEM_USE, listener, this, PluginListener.Priority.MEDIUM);
 		etc.getLoader().addListener(PluginLoader.Hook.LOGIN, listener, this, PluginListener.Priority.MEDIUM);
+		etc.getLoader().addListener(PluginLoader.Hook.DISCONNECT, listener, this, PluginListener.Priority.MEDIUM);
 
 		log.info(name + " " + version + " initialized");
 	}

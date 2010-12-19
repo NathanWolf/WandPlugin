@@ -2,6 +2,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -14,19 +15,40 @@ public class WandListener extends PluginListener
 	
 	private String commandFile;
 	private HashMap<String, PlayerWand> playerWands = new HashMap<String, PlayerWand>();
-
+	private ArrayList<String> defaultCommands;
+	
 	private static String STR_WAND_USAGE = "Use:@/wand bind <command> : bind a command to your wand.@/wand unbind <command> : unbind a command from your wand.@/wand list : list bound commands.";
+	private static String STR_WAND_BOUND = "Wand bound to ";
+	private static String STR_WAND_UNBOUND = "Wand unbound from ";
+	private static String STR_WAND_ENCHANTED = "Wand enchanted with ";
+	private static String STR_WAND_NO_SPELLS = "Your wand is not enchanted";
+	
 	private static int WAND_ITEM_ID;
 	
 	public void enable() 
 	{
 		PropertiesFile properties = new PropertiesFile("wand.properties");
-		STR_WAND_USAGE = properties.getString("general-wand-usage", STR_WAND_USAGE);	
+		STR_WAND_USAGE = properties.getString("text-wand-usage", STR_WAND_USAGE);
+		STR_WAND_BOUND = properties.getString("text-wand-bound", STR_WAND_BOUND);
+		STR_WAND_UNBOUND = properties.getString("text-wand-unbound", STR_WAND_UNBOUND);
+		STR_WAND_ENCHANTED = properties.getString("text-wand-enchanted", STR_WAND_ENCHANTED);
+		STR_WAND_NO_SPELLS = properties.getString("text-wand-nospells", STR_WAND_NO_SPELLS);
 		WAND_ITEM_ID = properties.getInt("wand-item-id", 280);
-		commandFile = "wand-command.txt";
+		commandFile = "wand-commands.txt";
 		playerWands = new HashMap<String, PlayerWand>();
+		defaultCommands = new ArrayList<String>();
 		
+		parseDefaultCommands(properties.getString("wand-default-commands", "compass,spawn"));
 		load();
+	}
+	
+	private void parseDefaultCommands(String commandString)
+	{
+		String[] commands = commandString.split(",");
+		for (int i = 0; i < commands.length; i++)
+		{
+			defaultCommands.add(commands[i]);
+		}
 	}
 	
 	public void save()
@@ -40,7 +62,7 @@ public class WandListener extends PluginListener
 			writer.newLine();
 			for (PlayerWand wand: playerWands.values())
 			{
-				String line = wand.getPlayer() + ":";
+				String line = wand.getPlayer() + ":" + wand.getSelectedSpell() + ":";
 				for (String command: wand.getCommands())
 				{
 					line = line + command + ":";
@@ -116,14 +138,29 @@ public class WandListener extends PluginListener
 		save();
 	}
 	
+	public PlayerWand createWand(Player player)
+	{
+		PlayerWand wand = new PlayerWand(player.getName());
+		for (int i = 0; i < defaultCommands.size(); i++)
+		{
+			if (defaultCommands.get(i).length() > 0)
+			{
+				wand.bind(defaultCommands.get(i));
+			}
+			wand.selectSpell(0);
+		}
+		playerWands.put(player.getName(), wand);
+		log.log(Level.INFO, "Created wand for player " + player.getName());
+		save();
+		return wand;
+	}
+	
 	public void onLogin(Player player)
 	{
-		PlayerWand loggedIn = playerWands.get(player.getName());
-		if (loggedIn == null)
+		PlayerWand wand = playerWands.get(player.getName());
+		if (wand == null)
 		{
-			loggedIn = new PlayerWand(player.getName());
-			playerWands.put(player.getName(), loggedIn);
-			log.log(Level.INFO, "Player " + player.getName() + " wand loaded");
+			createWand(player);
 		}
 		else
 		{
@@ -131,12 +168,17 @@ public class WandListener extends PluginListener
 		}
 	}
 	
+	public void onDisconnect(Player player)
+	{
+		save();
+	}
+	
 	public PlayerWand getWand(Player player)
 	{
 		PlayerWand wand = playerWands.get(player.getName());
 		if (wand == null) 
 		{
-			log.log(Level.SEVERE, "Player's wand is not in the map!");
+			wand = createWand(player);
 		}
 		return wand;
 	}
@@ -155,14 +197,18 @@ public class WandListener extends PluginListener
 		{
 			if (command.length == 2 && command[1].equalsIgnoreCase("list"))
 			{
+				if (wand.getCommands().size() <= 0)
+				{
+					player.sendMessage(Colors.Red + STR_WAND_NO_SPELLS);
+				}
 				for (int i = 0; i < wand.getCommands().size(); i++)
 				{
-					String isCurrent = "";
+					String isCurrent = " ";
 					if (i == wand.getSelectedSpell())
 					{
 						isCurrent = "*";
 					}
-					player.sendMessage(Colors.Green + wand.getCommands().get(i) + isCurrent);
+					player.sendMessage(Colors.Green + isCurrent + wand.getCommands().get(i));
 				}
 				return true;
 			}
@@ -186,13 +232,13 @@ public class WandListener extends PluginListener
 				if (command[1].equalsIgnoreCase("bind"))
 				{
 					wand.bind(wandCommand);
-					player.sendMessage(Colors.Green + "Wand bound to '" + wandCommand + "'");
+					player.sendMessage(Colors.Green + STR_WAND_BOUND + " '" + wandCommand + "'");
 					save();
 				}
 				if (command[1].equalsIgnoreCase("unbind"))
 				{
 					wand.unbind(wandCommand);
-					player.sendMessage(Colors.Green + "Wand unbound from '" + wandCommand + "'");
+					player.sendMessage(Colors.Green + STR_WAND_UNBOUND + " '" + wandCommand + "'");
 					save();
 				}
 			}
@@ -217,7 +263,7 @@ public class WandListener extends PluginListener
 		{
 			PlayerWand wand = getWand(player);
 			wand.cycleSpells();
-			player.sendMessage(Colors.Green + "Wand enchanted with '" + wand.getCurrentCommand() + "'");
+			player.sendMessage(Colors.Green + STR_WAND_ENCHANTED + " '" + wand.getCurrentCommand() + "'");
 			return true;
 		}
 		return false;
