@@ -38,7 +38,7 @@ public class WandListener extends PluginListener
 		playerWands = new HashMap<String, PlayerWand>();
 		defaultCommands = new ArrayList<String>();
 		
-		parseDefaultCommands(properties.getString("wand-default-commands", "compass,spawn"));
+		parseDefaultCommands(properties.getString("wand-default-commands", ""));
 		load();
 	}
 	

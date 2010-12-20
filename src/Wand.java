@@ -10,7 +10,7 @@ public class Wand extends Plugin
 	private static final Logger log = Logger.getLogger("Minecraft");
 	
 	private String name = "Wand";
-	private String version = "0.02";
+	private String version = "1.00";
 	
 	public void enable() 
 	{
@@ -22,7 +22,7 @@ public class Wand extends Plugin
 	public void disable() 
 	{
 		etc inst = etc.getInstance();
-		inst.removeCommand("/cast");
+		inst.removeCommand("/wand");
 		listener.disable();
 	}
 
