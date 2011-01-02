@@ -3,6 +3,7 @@ import java.util.logging.Logger;
 /**
 *
 * @author NathanWolf
+* 
 */
 public class Wand extends Plugin  
 {
@@ -10,7 +11,7 @@ public class Wand extends Plugin
 	private static final Logger log = Logger.getLogger("Minecraft");
 	
 	private String name = "Wand";
-	private String version = "1.00";
+	private String version = "1.01";
 	
 	public void enable() 
 	{
